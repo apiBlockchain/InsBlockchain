@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"encoding/json"
 	"time"
-	//"github.com/openblockchain/obc-peer/openchain/chaincode/shim"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 
 )
@@ -41,20 +40,6 @@ const NUM_TX_TO_RETURN = 27
 // Smart Contract Id numbers
 const TRAVEL_CONTRACT   = "Paris"
 const FEEDBACK_CONTRACT = "Feedback"
-
-
-// Employee Record
-type Employee   struct {
-	Name   		string   `json:"Name"`
-	Address 	string   `json:"Address"`
-	Email 		string   `json:"Email"`
-	Phone 		string   `json:"Phone"`
-	Birthdate   string   `json:"Birthdate"`
-	Gender    	string   `json:"Gender"`
-	EmployerID  string   `json:"EmployerID"`
-	EmployeeID	string   `json:"EmployeeID"`
-	SSN			string   `json:"SSN"`
-}
 
 
 // Blockchain point transaction record
@@ -74,6 +59,7 @@ type Transaction struct {
 	StatusCode	int 	 `json:"StatusCode"`
 	StatusMsg	string   `json:"StatusMsg"`
 }
+
 
 // Smart contract metadata record
 type Contract struct {
@@ -131,29 +117,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 	
-	
-	// Create an example employee
-	// Employee Record
-	var natalieSmith Employee;
-	
-
-	natalieSmith.Name   		=	"Natalie Smith";
-	natalieSmith.Address 		=	"2452 Elm Street Dallas TX 75039";
-	natalieSmith.Email 			=	"nsmith@openInsurance.com";
-	natalieSmith.Phone 			=	"(919) 555-2895";
-	natalieSmith.Birthdate   	=	"03/19/1985";
-	natalieSmith.Gender    		=	"Female";
-	natalieSmith.EmployerID  	=	"OI";
-	natalieSmith.EmployeeID		=	"OI294048";
-	natalieSmith.SSN			=   "283-58-2985";
-
-	jsonAsBytes, _ := json.Marshal(natalieSmith)
-	err = stub.PutState(natalieSmith.EmployeeID, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Bank user account")
-		return nil, err
-	}
-	
 	// Create the 'Bank' user and add it to the blockchain
 	var bank User
 	bank.UserId = "B1928564";
@@ -166,7 +129,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	bank.NumTxs  = 0
 	
 	
-	jsonAsBytes, _ = json.Marshal(bank)
+	jsonAsBytes, _ := json.Marshal(bank)
 	err = stub.PutState(bank.UserId, jsonAsBytes)								
 	if err != nil {
 		fmt.Println("Error Creating Bank user account")
@@ -358,7 +321,6 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	if function == "getUserAccount" { return t.getUserAccount(stub, args[1]) }
 	if function == "getAllContracts" { return t.getAllContracts(stub) }
 	if function == "getReferenceNumber" { return t.getReferenceNumber(stub) }
-	if function == "getEmployeeRecord" { return t.getEmployeeRecord(stub, args[1]) }
 	
 	fmt.Println("query did not find func: " + function)						//error
 
@@ -382,22 +344,6 @@ func (t *SimpleChaincode) getUserAccount(stub shim.ChaincodeStubInterface, userI
 	return fdAsBytes, nil
 	
 }
-
-func (t *SimpleChaincode) getEmployeeRecord(stub shim.ChaincodeStubInterface, employeeId string)([]byte, error){
-	
-	fmt.Println("Start getEmployeeRecord")
-	fmt.Println("Looking for Employee with ID " + employeeId);
-
-	//get the User index
-	fdAsBytes, err := stub.GetState(employeeId)
-	if err != nil {
-		return nil, errors.New("Failed to get Employee account from blockchain")
-	}
-
-	return fdAsBytes, nil
-	
-}
-
 
 // ============================================================================================================================
 // Get all transactions that involve a particular user
