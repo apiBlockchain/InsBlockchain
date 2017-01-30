@@ -137,7 +137,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	
 	// IF the reference number exists already, just return
 	_, numErr := stub.GetState("refNumber")
-	if numErr == nil {
+	if numErr != nil {
 		fmt.Println("Init function already ran - doing nothing")
 		return nil, nil
 	}
