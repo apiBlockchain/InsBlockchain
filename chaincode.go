@@ -113,18 +113,24 @@ type AllTransactions struct{
 // Main
 // ============================================================================================================================
 func main() {
-	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-	}
+	//err := shim.Start(new(SimpleChaincode))
+	//if err != nil {
+	//	fmt.Printf("Error starting Simple chaincode: %s", err)
+	//}
 }
 
 // ============================================================================================================================
 // Init - reset all the things
 // ============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+		return nil, nil	
+	
+}
 
-	var err error
+
+func (t *SimpleChaincode) CreateData(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	
+var err error
 
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
@@ -311,7 +317,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 	
-	return nil, nil
+	return nil, nil	
+	
+	
+	
 }
 
 // ============================================================================================================================
@@ -339,6 +348,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.addSmartContract(stub, args)
 	} else if function == "incrementReferenceNumber" {											//create a transaction
 		return t.incrementReferenceNumber(stub, args)
+	} else if function == "CreateData" {											//create a transaction
+		return t.CreateData(stub, "init", args)
 	} 
 		
 	fmt.Println("invoke did not find func: " + function)					//error
