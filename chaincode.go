@@ -131,27 +131,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	
 	
-	
-		// Create transaction reference number and store it on the blockchain
-	var refNumber int;
-	
-	// IF the reference number exists already, just return
-	_, numErr := stub.GetState("refNumber")
-	if numErr != nil {
-		fmt.Println("Init function already ran - doing nothing")
-		return nil, nil
-	}
-	
-	
-	refNumber = 2985674978
-	jsonAsBytes, _ := json.Marshal(refNumber)
-	err = stub.PutState("refNumber", jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating reference number")
-		return nil, err
-	}
-	
-	
 	// Create an example employee
 	// Employee Record
 	var natalieSmith Employee;
@@ -167,7 +146,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	natalieSmith.EmployeeID		=	"OI294048";
 	natalieSmith.SSN			=   "283-58-2985";
 
-	jsonAsBytes, _ = json.Marshal(natalieSmith)
+	jsonAsBytes, _ := json.Marshal(natalieSmith)
 	err = stub.PutState(natalieSmith.EmployeeID, jsonAsBytes)								
 	if err != nil {
 		fmt.Println("Error Creating Bank user account")
@@ -259,7 +238,16 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 	
-
+	// Create transaction reference number and store it on the blockchain
+	var refNumber int
+	
+	refNumber = 2985674978
+	jsonAsBytes, _ = json.Marshal(refNumber)
+	err = stub.PutState("refNumber", jsonAsBytes)								
+	if err != nil {
+		fmt.Println("Error Creating reference number")
+		return nil, err
+	}
 
 	
 	// Create contract metadata for double points and add it to the blockchain
