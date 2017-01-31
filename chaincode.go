@@ -151,12 +151,12 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	
 	//////////////////////////////
-	refNumberBytes, _ := stub.GetState("refNumber")	
-	json.Unmarshal(refNumberBytes, &refNumber)
+	//refNumberBytes, _ := stub.GetState("refNumber")	
+	//json.Unmarshal(refNumberBytes, &refNumber)
 	
-	if refNumber == 2985674978 {
-		return nil, nil
-	}
+	//if refNumber == 2985674978 {
+	return nil, nil
+	//}
 	//////////////////////////////////////
 	
 	
