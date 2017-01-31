@@ -113,17 +113,40 @@ type AllTransactions struct{
 // Main
 // ============================================================================================================================
 func main() {
-	//err := shim.Start(new(SimpleChaincode))
-	//if err != nil {
-	//	fmt.Printf("Error starting Simple chaincode: %s", err)
-	//}
+	err := shim.Start(new(SimpleChaincode))
+	if err != nil {
+		fmt.Printf("Error starting Simple chaincode: %s", err)
+	}
 }
 
 // ============================================================================================================================
 // Init - reset all the things
 // ============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-		return nil, nil	
+		
+	// Create the 'Natalie' user and add her to the blockchain
+	var natalie User
+	var err error
+	
+	
+	natalie.UserId = "U2974034";
+	natalie.Name = "Natalie"
+	natalie.Balance = 1000
+	natalie.Status  = "Platinum"
+	natalie.Expiration = "2017-06-01"
+	natalie.Join  = "2015-05-31"
+	natalie.Modified = "2016-05-06"
+	natalie.NumTxs  = 0
+	
+	jsonAsBytes, _ := json.Marshal(natalie)
+	err = stub.PutState(natalie.UserId, jsonAsBytes)								
+	if err != nil {
+		fmt.Println("Error Creating Natalie user account")
+		return nil, err
+	}
+	
+	
+	return nil, nil	
 	
 }
 
@@ -198,23 +221,7 @@ var err error
 	}
 	
 	
-	// Create the 'Natalie' user and add her to the blockchain
-	var natalie User
-	natalie.UserId = "U2974034";
-	natalie.Name = "Natalie"
-	natalie.Balance = 1000
-	natalie.Status  = "Platinum"
-	natalie.Expiration = "2017-06-01"
-	natalie.Join  = "2015-05-31"
-	natalie.Modified = "2016-05-06"
-	natalie.NumTxs  = 0
-	
-	jsonAsBytes, _ = json.Marshal(natalie)
-	err = stub.PutState(natalie.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Natalie user account")
-		return nil, err
-	}
+
 	
 	
 	// Create the 'Anthony' user and add him to the blockchain
