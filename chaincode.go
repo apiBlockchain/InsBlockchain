@@ -131,6 +131,32 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	
 	
+	// Create the 'Natalie' user and add her to the blockchain
+	var natalie User
+	natalie.UserId = "U2974034";
+	natalie.Name = "Natalie"
+	natalie.Balance = 1000
+	natalie.Status  = "Platinum"
+	natalie.Expiration = "2017-06-01"
+	natalie.Join  = "2015-05-31"
+	natalie.Modified = "2016-05-06"
+	natalie.NumTxs  = 0
+	
+	jsonAsBytes, _ := json.Marshal(natalie)
+	err = stub.PutState(natalie.UserId, jsonAsBytes)								
+	if err != nil {
+		fmt.Println("Error Creating Natalie user account")
+		return nil, err
+	}
+	
+	//////////////////////////////
+	_, numErr := stub.GetState("refNumber")
+	if numErr == nil {
+		return nil, nil
+	}
+	//////////////////////////////////////
+	
+	
 	// Create an example employee
 	// Employee Record
 	var natalieSmith Employee;
@@ -146,7 +172,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	natalieSmith.EmployeeID		=	"OI294048";
 	natalieSmith.SSN			=   "283-58-2985";
 
-	jsonAsBytes, _ := json.Marshal(natalieSmith)
+	jsonAsBytes, _ = json.Marshal(natalieSmith)
 	err = stub.PutState(natalieSmith.EmployeeID, jsonAsBytes)								
 	if err != nil {
 		fmt.Println("Error Creating Bank user account")
@@ -191,24 +217,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, err
 	}
 	
-	
-	// Create the 'Natalie' user and add her to the blockchain
-	var natalie User
-	natalie.UserId = "U2974034";
-	natalie.Name = "Natalie"
-	natalie.Balance = 1000
-	natalie.Status  = "Platinum"
-	natalie.Expiration = "2017-06-01"
-	natalie.Join  = "2015-05-31"
-	natalie.Modified = "2016-05-06"
-	natalie.NumTxs  = 0
-	
-	jsonAsBytes, _ = json.Marshal(natalie)
-	err = stub.PutState(natalie.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Natalie user account")
-		return nil, err
-	}
 	
 	
 	// Create the 'Anthony' user and add him to the blockchain
