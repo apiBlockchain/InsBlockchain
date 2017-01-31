@@ -125,7 +125,8 @@ func main() {
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	var err error
-
+	var refNumber int
+	
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
@@ -150,8 +151,10 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	
 	//////////////////////////////
-	_, numErr := stub.GetState("refNumber")
-	if numErr == nil {
+	refNumberBytes, _ := stub.GetState("refNumber")	
+	json.Unmarshal(refNumberBytes, &refNumber)
+	
+	if refNumber == 2985674978 {
 		return nil, nil
 	}
 	//////////////////////////////////////
@@ -247,7 +250,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	
 	// Create transaction reference number and store it on the blockchain
-	var refNumber int
+	
 	
 	refNumber = 2985674978
 	jsonAsBytes, _ = json.Marshal(refNumber)
@@ -480,7 +483,6 @@ func (t *SimpleChaincode) incrementReferenceNumber(stub shim.ChaincodeStubInterf
 	}
 	
 	json.Unmarshal(refNumberBytes, &refNumber)
-	refNumber = refNumber + 1;
 	refNumberBytes, _ = json.Marshal(refNumber)
 	err := stub.PutState("refNumber", refNumberBytes)								
 	if err != nil {
@@ -672,7 +674,6 @@ func (t *SimpleChaincode) transferPoints(stub shim.ChaincodeStubInterface, args 
 	
 	json.Unmarshal(refNumberBytes, &refNumber)
 	tx.RefNumber 	= strconv.Itoa(refNumber)
-	refNumber = refNumber + 1;
 	refNumberBytes, _ = json.Marshal(refNumber)
 	err = stub.PutState("refNumber", refNumberBytes)								
 	if err != nil {
