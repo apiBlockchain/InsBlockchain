@@ -123,37 +123,8 @@ func main() {
 // Init - reset all the things
 // ============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-		
-	// Create the 'Natalie' user and add her to the blockchain
-	var natalie User
+
 	var err error
-	
-	
-	natalie.UserId = "U2974034";
-	natalie.Name = "Natalie"
-	natalie.Balance = 1000
-	natalie.Status  = "Platinum"
-	natalie.Expiration = "2017-06-01"
-	natalie.Join  = "2015-05-31"
-	natalie.Modified = "2016-05-06"
-	natalie.NumTxs  = 0
-	
-	jsonAsBytes, _ := json.Marshal(natalie)
-	err = stub.PutState(natalie.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Natalie user account")
-		return nil, err
-	}
-	
-	
-	return nil, nil	
-	
-}
-
-
-func (t *SimpleChaincode) CreateData(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	
-var err error
 
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
@@ -221,7 +192,23 @@ var err error
 	}
 	
 	
-
+	// Create the 'Natalie' user and add her to the blockchain
+	var natalie User
+	natalie.UserId = "U2974034";
+	natalie.Name = "Natalie"
+	natalie.Balance = 1000
+	natalie.Status  = "Platinum"
+	natalie.Expiration = "2017-06-01"
+	natalie.Join  = "2015-05-31"
+	natalie.Modified = "2016-05-06"
+	natalie.NumTxs  = 0
+	
+	jsonAsBytes, _ = json.Marshal(natalie)
+	err = stub.PutState(natalie.UserId, jsonAsBytes)								
+	if err != nil {
+		fmt.Println("Error Creating Natalie user account")
+		return nil, err
+	}
 	
 	
 	// Create the 'Anthony' user and add him to the blockchain
@@ -324,10 +311,7 @@ var err error
 		return nil, err
 	}
 	
-	return nil, nil	
-	
-	
-	
+	return nil, nil
 }
 
 // ============================================================================================================================
@@ -355,8 +339,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.addSmartContract(stub, args)
 	} else if function == "incrementReferenceNumber" {											//create a transaction
 		return t.incrementReferenceNumber(stub, args)
-	} else if function == "CreateData" {											//create a transaction
-		return t.CreateData(stub, "init", args)
 	} 
 		
 	fmt.Println("invoke did not find func: " + function)					//error
