@@ -18,97 +18,97 @@ under the License.
 */
 
 package main
-
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"encoding/json"
 	"time"
+	"encoding/json"
+	"strconv"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-
 )
-
-// Test comment
 // SimpleChaincode example simple Chaincode implementation
 type SimpleChaincode struct {
 }
 
-// Maximum number of transactions to return
-const NUM_TX_TO_RETURN = 27
+// Address Record
+type Location   struct {
+	Street   	string   `json:"Street"`
+	Unit   		string   `json:"Unit"`
+	City 		string   `json:"City"`
+	State 		string   `json:"State"`
+	Zip 		string   `json:"Zip"`
+}
 
-// Smart Contract Id numbers
-const TRAVEL_CONTRACT   = "Paris"
-const FEEDBACK_CONTRACT = "Feedback"
+// Check Record
+type DataCheck   struct {
+	Result   	string   `json:"Status"`
+	Message   	string   `json:"Message"`
+}
 
 
 // Employee Record
 type Employee   struct {
 	Name   		string   `json:"Name"`
-	Address 	string   `json:"Address"`
+	Address 	Location  `json:"Address"`
 	Email 		string   `json:"Email"`
 	Phone 		string   `json:"Phone"`
-	Birthdate   string   `json:"Birthdate"`
+	DOB  		 string   `json:"DOB"`
 	Gender    	string   `json:"Gender"`
 	EmployerID  string   `json:"EmployerID"`
 	EmployeeID	string   `json:"EmployeeID"`
-	SSN			string   `json:"SSN"`
+	Type		string   `json:"Type"`
+	Status		string   `json:"Status"`
+	StartDate	string   `json:"StartDate"`
+	EndDate		string   `json:"EndDate"`
 }
 
 
-// Blockchain point transaction record
-type Transaction struct {
-	RefNumber   string   `json:"RefNumber"`
-	Date 		time.Time   `json:"Date"`
-	Description string   `json:"description"`
-	Type 		string   `json:"Type"`
-	Amount    	float64  `json:"Amount"`
-	Money    	float64  `json:"Money"`
-	Activities  int      `json:"FeedbackActivitiesDone"`
-	To			string   `json:"ToUserid"`
-	From		string   `json:"FromUserid"`
-	ToName	    string   `json:"ToName"`
-	FromName	string   `json:"FromName"`
-	ContractId	string   `json:"ContractId"`
-	StatusCode	int 	 `json:"StatusCode"`
-	StatusMsg	string   `json:"StatusMsg"`
+type Member struct {
+	MemberName string `json:"MemberName"`
+	MemberID  string   `json:"MemberID"`
+	MemberDOB  string   `json:"MemberDOB"`
+	SubscriberID string `json:"SubscriberID"`
 }
 
-// Smart contract metadata record
-type Contract struct {
-	Id			string   `json:"ID"`
-	BusinessId  string   `json:"BusinessId"`
-	BusinessName string   `json:"BusinessName"`
-	Title		string   `json:"Title"`
-	Description string   `json:"Description"`
-	Conditions  []string `json:"Conditions"`
-	Icon        string 	 `json:"Icon"`
-	StartDate   time.Time   `json:"StartDate"`
-	EndDate		time.Time   `json:"EndDate"`
-	Method	    string   `json:"Method"`
-	DiscountRate float64  `json:"DiscountRate"`
+//Coverage Record
+type Coverage struct {
+		CoverageName string  `json:"CoverageName"`
+		CoverageType string `json:"CoverageType"`
+		CarrierID string `json:"CarrierID"`
+		GroupNum string `json:"GroupNum"`
+		PlanCode string `json:"PlanCode"`
+		SubscriberID string `json:"SubscriberID"`
+	  SubscriberName string `json:"subsciberName"`
+	  SubscriberDOB string `json:"subscriberDOB"`
+		IsPrimary string `json:"isPrimary"`
+	  StartDate string   `json:"startDate"`
+	  EndDate string   `json:"EndDate"`
+		AnnualDeductible int `json:"AnnualDeductible"`
+		AnnualBenefitMaximum int `json:"AnnualBenefitMaximum"`
+		LifetimeBenefitMaximum string `json:"LifetimeBenefitMaximum"`
+		PreventiveCare  string `json:"PreventiveCare "`
+		MinorRestorativeCare string `json:"MinorRestorativeCare"`
+		MajorRestorativeCare string `json:"MajorRestorativeCare"`
+		OrthodonticTreatment string `json:"OrthodonticTreatment"`
+		OrthodonticLifetimeBenefitMaximum string `json:"OrthodonticLifetimeBenefitMaximum"`
+		AnnualDeductibleBal int `json:"AnnualDeductibleBal"`
+		AnnualBenefitMaximumBal int `json:"AnnualBenefitMaximumBal"`
+		EmployeeID string `json:"EmployeeID"`
+		MemberID string  `json:"MemberID"`
+		EmployerID string   `json:"EmployerID"`
+		Dependents []Member `json:"Dependents"`
+		Premium string `json:"Premium"`
+		}
+//Array for storing all coverages
+type AllCoverages struct{
+	Coverages []Coverage `json:"Coverages"`
 }
 
-
-
-// Open Points member record
-type User struct {
-	UserId		string   `json:"UserId"`
-	Name   		string   `json:"Name"`
-	Balance 	float64  `json:"Balance"`
-	NumTxs 	    int      `json:"NumberOfTransactions"`
-	Status      string 	 `json:"Status"`
-	Expiration  string   `json:"ExpirationDate"`
-	Join		string   `json:"JoinDate"`
-	Modified	string   `json:"LastModifiedDate"`
+type ALLMembers struct{
+	Members []Member `json:"Members"`
 }
 
-
-// Array for storing all open points transactions
-type AllTransactions struct{
-	Transactions []Transaction `json:"transactions"`
-}
-
+	var dental Coverage
 // ============================================================================================================================
 // Main
 // ============================================================================================================================
@@ -125,206 +125,87 @@ func main() {
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	var err error
-	var refNumber int
-	
+
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
-	
-	
-	// Create the 'Natalie' user and add her to the blockchain
-	var natalie User
-	natalie.UserId = "U2974034";
-	natalie.Name = "Natalie"
-	natalie.Balance = 1000
-	natalie.Status  = "Platinum"
-	natalie.Expiration = "2017-06-01"
-	natalie.Join  = "2015-05-31"
-	natalie.Modified = "2016-05-06"
-	natalie.NumTxs  = 0
-	
-	jsonAsBytes, _ := json.Marshal(natalie)
-	err = stub.PutState(natalie.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Natalie user account")
-		return nil, err
-	}
-	
-	//////////////////////////////
-	//refNumberBytes, _ := stub.GetState("refNumber")	
-	//json.Unmarshal(refNumberBytes, &refNumber)
-	
-	//if refNumber == 2985674978 {
-	return nil, nil
-	//}
-	//////////////////////////////////////
-	
-	
+
 	// Create an example employee
 	// Employee Record
-	var natalieSmith Employee;
-	
+	var aliceSheen Employee;
 
-	natalieSmith.Name   		=	"Natalie Smith";
-	natalieSmith.Address 		=	"2452 Elm Street Dallas TX 75039";
-	natalieSmith.Email 			=	"nsmith@openInsurance.com";
-	natalieSmith.Phone 			=	"(919) 555-2895";
-	natalieSmith.Birthdate   	=	"03/19/1985";
-	natalieSmith.Gender    		=	"Female";
-	natalieSmith.EmployerID  	=	"OI";
-	natalieSmith.EmployeeID		=	"OI294048";
-	natalieSmith.SSN			=   "283-58-2985";
 
-	jsonAsBytes, _ = json.Marshal(natalieSmith)
-	err = stub.PutState(natalieSmith.EmployeeID, jsonAsBytes)								
+	aliceSheen.Name   			=	"Alice Sheen";
+	aliceSheen.Address.Street 	=   "451 Indian Rocks Rd S";
+	aliceSheen.Address.City 	=   "Largo";
+	aliceSheen.Address.State 	=   "FL";
+	aliceSheen.Address.Zip 		=   "33770";
+
+	aliceSheen.Email 			=	"alicesheen@gmail.com";
+	aliceSheen.Phone 			=	"727-223-5432";
+	aliceSheen.DOB   			=	"08/16/1970";
+	aliceSheen.Gender    		=	"Female";
+	aliceSheen.EmployerID  		=	"Global Industries";
+	aliceSheen.EmployeeID		=	"294048";
+	aliceSheen.Type				= 	"Full Time";
+	aliceSheen.Status 			= 	"Active";
+	aliceSheen.StartDate		= 	"10/14/2008";
+	aliceSheen.EndDate			= 	"NA";
+
+	jsonAsBytes, _ := json.Marshal(aliceSheen)
+	err = stub.PutState(aliceSheen.EmployeeID, jsonAsBytes)
 	if err != nil {
 		fmt.Println("Error Creating Bank user account")
 		return nil, err
 	}
-	
-	// Create the 'Bank' user and add it to the blockchain
-	var bank User
-	bank.UserId = "B1928564";
-	bank.Name = "OpenFN"
-	bank.Balance = 1000000
-	bank.Status  = "Originator"
-	bank.Expiration = "2099-12-31"
-	bank.Join  = "2015-01-01"
-	bank.Modified = "2016-05-06"
-	bank.NumTxs  = 0
-	
-	
-	jsonAsBytes, _ = json.Marshal(bank)
-	err = stub.PutState(bank.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Bank user account")
-		return nil, err
-	}
-	
-	
-    // Create the 'Travel Agency' user and add it to the blockchain
-	var travel User
-	travel.UserId = "T5940872";
-	travel.Name = "Open Travel"
-	travel.Balance = 500000
-	travel.Status  = "Member"
-	travel.Expiration = "2099-12-31"
-	travel.Join  = "2015-01-01"
-	travel.Modified = "2016-05-06"
-	travel.NumTxs  = 0
-	
-	jsonAsBytes, _ = json.Marshal(travel)
-	err = stub.PutState(travel.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Travel user account")
-		return nil, err
-	}
-	
-	
-	
-	// Create the 'Anthony' user and add him to the blockchain
-	var anthony User
-	anthony.UserId = "U3151672";
-	anthony.Name = "Anthony"
-	anthony.Balance = 50000
-	anthony.Status  = "Silver"
-	anthony.Expiration = "2017-03-15"
-	anthony.Join  = "2015-08-15"
-	anthony.Modified = "2016-04-17"
-	anthony.NumTxs  = 0
-	
-	jsonAsBytes, _ = json.Marshal(anthony)
-	err = stub.PutState(anthony.UserId, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating Anthony user account")
-		return nil, err
-	}
-	
-	
-	// Create an array for storing all transactions, and store the array on the blockchain
-	var transactions AllTransactions
-	jsonAsBytes, _ = json.Marshal(transactions)
-	err = stub.PutState("allTx", jsonAsBytes)
-	if err != nil {
-		return nil, err
-	}
-	
-	// Create transaction reference number and store it on the blockchain
-	
-	
-	refNumber = 2985674978
-	jsonAsBytes, _ = json.Marshal(refNumber)
-	err = stub.PutState("refNumber", jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error Creating reference number")
-		return nil, err
-	}
 
-	
-	// Create contract metadata for double points and add it to the blockchain
-	var double Contract
-	double.Id = TRAVEL_CONTRACT
-	double.BusinessId  = "T5940872"
-	double.BusinessName = "Open Travel"
-	double.Title = "Paris for Less"
-	double.Description = "All Paris travel activities are half the stated point price"
-	double.Conditions = append(double.Conditions, "Half off dining and travel activities in Paris")
-	double.Conditions = append(double.Conditions, "Valid from May 11, 2016") 
-	double.Icon = ""
-	double.Method = "travelContract"
-	
-	startDate, _  := time.Parse(time.RFC822, "11 May 16 12:00 UTC")
-	double.StartDate = startDate
-	endDate, _  := time.Parse(time.RFC822, "31 Dec 60 11:59 UTC")
-	double.EndDate = endDate
-	
-	jsonAsBytes, _ = json.Marshal(double)
-	err = stub.PutState(TRAVEL_CONTRACT, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error creating double contract")
-		return nil, err
-	}
-	
-	
-	// Create contract metadata for feedback points and add it to the blockchain
-    var feedback Contract
-	feedback.Id = FEEDBACK_CONTRACT
-	feedback.BusinessId  = "T5940872"
-	feedback.BusinessName = "Open Travel"
-	feedback.Title = "Points for Feedback"
-	feedback.Description = "Earn points by sharing your thoughts on travel package and activities"
-	feedback.Conditions = append(feedback.Conditions, "1,000 points for travel package ")
-	feedback.Conditions = append(feedback.Conditions, "Valid from May 24, 2016")
-	feedback.Icon = ""
-	feedback.Method = "feedbackContract"
-	startDate, _  = time.Parse(time.RFC822, "24 May 16 12:00 UTC")
-	feedback.StartDate = startDate
-	endDate, _  = time.Parse(time.RFC822, "31 Dec 60 11:59 UTC")
-	feedback.EndDate = endDate
-	
-	jsonAsBytes, _ = json.Marshal(feedback)
-	err = stub.PutState(FEEDBACK_CONTRACT, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error creating feedback contract")
-		return nil, err
-	}
-
-	
-	// Create an array of contract ids to keep track of all contracts
-	var contractIds []string
-	contractIds = append(contractIds, TRAVEL_CONTRACT);
-	contractIds = append(contractIds, FEEDBACK_CONTRACT);
-	
-	jsonAsBytes, _ = json.Marshal(contractIds)
-	err = stub.PutState("contractIds", jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error storing contract Ids on blockchain")
-		return nil, err
-	}
-	
-	return nil, nil
+//create an array for storing all coverages , and store the array on the blockchain
+var coverages AllCoverages
+jsonAsBytes, _ = json.Marshal(coverages)
+err = stub.PutState("allCvgs", jsonAsBytes)
+if err != nil {
+	return nil, err
 }
 
+//create an array for storing all members and store array on the blockchain
+
+var members ALLMembers
+jsonAsBytes, _ = json.Marshal(members)
+err = stub.PutState("allMembrs", jsonAsBytes)
+if err != nil {
+	return nil, err
+}
+dental.EmployeeID="294048"
+dental.MemberID="M-01"
+var dep1 Member;
+var dep2 Member;
+dep1.MemberName ="Megan Sheen";
+dep1.MemberID="M-03";
+dep1.MemberDOB="08/20/1990";
+dep1.SubscriberID="ba2345";
+jsonAsBytes, _ = json.Marshal(dep1);
+err= stub.PutState(dep1.MemberID, jsonAsBytes);
+if err != nil {
+	fmt.Println("Error Creating dependents")
+	return nil, err
+}
+
+dep2.MemberName ="Wade Sheen";
+dep2.MemberID="M-02";
+dep2.MemberDOB="08/20/1961";
+dep2.SubscriberID="ba2345";
+jsonAsBytes, _ = json.Marshal(dep2);
+err= stub.PutState(dep2.MemberID, jsonAsBytes);
+if err != nil {
+	fmt.Println("Error Creating dependents")
+	return nil, err
+}
+		dental.Dependents=append(dental.Dependents,dep1);
+		dental.Dependents=append(dental.Dependents,dep2);
+
+
+return nil,nil
+}
 // ============================================================================================================================
 // Run - Our entry point for Invocations - [LEGACY] obc-peer 4/25/2016
 // ============================================================================================================================
@@ -338,22 +219,15 @@ func (t *SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string,
 // ============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
-
-
-	
 	// Handle different functions
 	if function == "init" {													//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
-	} else if function == "transferPoints" {											//create a transaction
-		return t.transferPoints(stub, args)
-	} else if function == "addSmartContract" {											//create a transaction
-		return t.addSmartContract(stub, args)
-	} else if function == "incrementReferenceNumber" {											//create a transaction
-		return t.incrementReferenceNumber(stub, args)
-	} 
-		
+		} else if function == "addCoverage" {											//create a transaction
+		return t.addCoverage(stub, args)
+	}	else if function == "updateCoverage" {											//create a transaction
+	return t.updateCoverage(stub, args)
+}
 	fmt.Println("invoke did not find func: " + function)					//error
-
 	return nil, errors.New("Received unknown function invocation")
 }
 
@@ -362,14 +236,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 // ============================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
-
-	
-	if function == "getTxs" { return t.getTxs(stub, args[1]) }
+	if function == "getCoverages" { return t.getCoverages(stub, args[1]) }
+	if function == "getBlockchainRecord" { return t.getBlockchainRecord(stub, args[1]) }
 	if function == "getUserAccount" { return t.getUserAccount(stub, args[1]) }
-	if function == "getAllContracts" { return t.getAllContracts(stub) }
-	if function == "getReferenceNumber" { return t.getReferenceNumber(stub) }
 	if function == "getEmployeeRecord" { return t.getEmployeeRecord(stub, args[1]) }
-	
+	if function == "verifyEmployment" { return t.verifyEmployment(stub, args[1]) }
+	if function == "verifyCoverage" { return t.verifyCoverage(stub, args[1], args[2]) }
+
 	fmt.Println("query did not find func: " + function)						//error
 
 	return nil, errors.New("Received unknown function query")
@@ -379,7 +252,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 // Get Open Points member account from the blockchain
 // ============================================================================================================================
 func (t *SimpleChaincode) getUserAccount(stub shim.ChaincodeStubInterface, userId string)([]byte, error){
-	
+
 	fmt.Println("Start getUserAccount")
 	fmt.Println("Looking for user with ID " + userId);
 
@@ -390,11 +263,135 @@ func (t *SimpleChaincode) getUserAccount(stub shim.ChaincodeStubInterface, userI
 	}
 
 	return fdAsBytes, nil
-	
+
 }
 
+func (t *SimpleChaincode) verifyEmployment(stub shim.ChaincodeStubInterface, subscriberId string)([]byte, error){
+
+	// Get the insurance coverage record
+	coverageAsBytes, err := stub.GetState(subscriberId)
+	if err != nil {
+		return nil, errors.New("Failed to get coverage from blockchain")
+	}
+	var insRecord Coverage
+	json.Unmarshal(coverageAsBytes, &insRecord)
+
+
+	// Get the employee record
+	employeeAsBytes, err := stub.GetState(insRecord.EmployeeID)
+	if err != nil {
+		return nil, errors.New("Failed to get user account from blockchain")
+	}
+
+	// Unmarshall the employee record from the blockchain
+	var empRecord Employee
+	json.Unmarshal(employeeAsBytes, &empRecord)
+
+
+	// Check that the employment is valid
+
+	var checkResults DataCheck
+	checkResults.Result 	= "Passed";
+	checkResults.Message 	= "Primary policy holder is a valid employee."
+
+	if empRecord.Type != "Full Time" {
+		checkResults.Result 	= "Failed";
+		checkResults.Message 	= "Primary policy holder is not a full-time employee."
+	}
+
+	if empRecord.Status != "Active" {
+		checkResults.Result 	= "Failed";
+		checkResults.Message 	= "Primary policy holder is not an active employee."
+	}
+
+
+	resAsBytes, _ := json.Marshal(checkResults)
+	return resAsBytes, nil
+
+}
+
+
+func (t *SimpleChaincode) verifyCoverage(stub shim.ChaincodeStubInterface, subscriberId string, memberId string)([]byte, error){
+
+	dateForDemo, _ := time.Parse("01/02/2006",  "01/15/2017")
+
+	// Get the insurance coverage record
+	coverageAsBytes, err := stub.GetState(subscriberId)
+	if err != nil {
+		return nil, errors.New("Failed to get coverage from blockchain")
+	}
+	var insRecord Coverage
+	json.Unmarshal(coverageAsBytes, &insRecord)
+
+	/// Add some magic to get the right dependent here
+
+
+	var checkResults DataCheck
+	checkResults.Result 	= "Passed";
+	checkResults.Message 	= "Coverage is valid."
+
+
+	// Check if age is > 26 ONLY if the person is NOT the primary member
+	if	insRecord.MemberID != memberId {
+
+		numDependents := len(insRecord.Dependents)
+
+		for index := numDependents - 1; index >= 0; index-- {
+
+			if insRecord.Dependents[index].MemberID == memberId{
+
+				memberDobDate, _ := time.Parse("01/02/2006", insRecord.Dependents[index].MemberDOB)
+				ageInYears, _, _, _, _, _ 	  := diff(memberDobDate, dateForDemo)
+
+				if ageInYears >= 26 {
+					checkResults.Result 	= "Failed";
+					checkResults.Message 	= "Dependent is above legal minimum coverage age."
+				}
+
+			}
+
+		}
+	}
+
+	startDate,_ 	:= time.Parse("2006-01-02",  insRecord.StartDate)
+	endDate,_	:= time.Parse("2006-01-02",  insRecord.EndDate)
+
+	// Check if plan is active
+	if (!(dateForDemo.After(startDate) && dateForDemo.Before(endDate))) {
+		checkResults.Result 	= "Failed";
+		checkResults.Message 	= "Policy is not active."
+	}
+
+	// Check if annual benefit max has not yet been reached
+	if (insRecord.AnnualBenefitMaximumBal  < 1 ) {
+		checkResults.Result 	= "Failed";
+		checkResults.Message 	= "Annual maximum has already been met."
+	}
+
+	resAsBytes, _ := json.Marshal(checkResults)
+	return resAsBytes, nil
+
+}
+
+
+func (t *SimpleChaincode) getBlockchainRecord(stub shim.ChaincodeStubInterface, recordKey string)([]byte, error){
+
+	fmt.Println("Start getBlockchainRecord")
+	fmt.Println("Looking for user with ID " + recordKey);
+
+	//get the User index
+	fdAsBytes, err := stub.GetState(recordKey)
+	if err != nil {
+		return nil, errors.New("Failed to get user account from blockchain")
+	}
+
+	return fdAsBytes, nil
+
+}
+
+
 func (t *SimpleChaincode) getEmployeeRecord(stub shim.ChaincodeStubInterface, employeeId string)([]byte, error){
-	
+
 	fmt.Println("Start getEmployeeRecord")
 	fmt.Println("Looking for Employee with ID " + employeeId);
 
@@ -405,370 +402,162 @@ func (t *SimpleChaincode) getEmployeeRecord(stub shim.ChaincodeStubInterface, em
 	}
 
 	return fdAsBytes, nil
-	
-}
-
-
-// ============================================================================================================================
-// Get all transactions that involve a particular user
-// ============================================================================================================================
-func (t *SimpleChaincode) getTxs(stub shim.ChaincodeStubInterface, userId string)([]byte, error){
-	
-	var res AllTransactions
-
-	fmt.Println("Start find getTransactions")
-	fmt.Println("Looking for " + userId);
-
-	//get the AllTransactions index
-	allTxAsBytes, err := stub.GetState("allTx")
-	if err != nil {
-		return nil, errors.New("Failed to get all Transactions")
-	}
-
-	var txs AllTransactions
-	json.Unmarshal(allTxAsBytes, &txs)
-	numTxs := len(txs.Transactions)
-
-	for i := numTxs -1; i >= 0; i-- {
-	    if txs.Transactions[i].From == userId{
-			res.Transactions = append(res.Transactions, txs.Transactions[i])
-		}
-
-		if txs.Transactions[i].To == userId{
-			res.Transactions = append(res.Transactions, txs.Transactions[i])
-		}
-		
-		if (len(res.Transactions) >= NUM_TX_TO_RETURN) { break }
-	}
-
-	resAsBytes, _ := json.Marshal(res)
-
-	return resAsBytes, nil
-	
-}
-
-
-// ============================================================================================================================
-// Get the smart contract metadata from the blockchain
-// ============================================================================================================================
-func (t *SimpleChaincode) getAllContracts(stub shim.ChaincodeStubInterface)([]byte, error)  {
-
-	contractIdsAsBytes, _ := stub.GetState("contractIds")
-	var contractIds []string
-	json.Unmarshal(contractIdsAsBytes, &contractIds)
-	
-	var allContracts []Contract
-	for i := range contractIds{
-		contractAsBytes, _ := stub.GetState(contractIds[i])
-		var thisContract Contract
-		json.Unmarshal(contractAsBytes, &thisContract)
-		allContracts = append(allContracts, thisContract)
-	}
-
-	asBytes, _ := json.Marshal(allContracts)
-	return asBytes, nil
 
 }
+func (t *SimpleChaincode) getCoverages(stub shim.ChaincodeStubInterface, subscriberID string)([]byte, error){
 
+	fmt.Println("Start Get Coverage")
+	fmt.Println("Looking for Coverage for SubscriberID" + subscriberID);
 
-
-func (t *SimpleChaincode) incrementReferenceNumber(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-
-
-	var refNumber int
-	refNumberBytes, numErr := stub.GetState("refNumber")
-	if numErr != nil {
-		fmt.Println("Error Getting  ref number")
-		return nil, numErr
-	}
-	
-	json.Unmarshal(refNumberBytes, &refNumber)
-	refNumberBytes, _ = json.Marshal(refNumber)
-	err := stub.PutState("refNumber", refNumberBytes)								
+	coverageAsBytes, err := stub.GetState(subscriberID)
 	if err != nil {
-		fmt.Println("Error Creating updating ref number")
-		return nil, err
+		return nil, errors.New("Failed to get coverage from blockchain")
 	}
-
-	return nil, nil
+	return coverageAsBytes, nil
 }
+//Update Coverage
 
+func (t *SimpleChaincode) updateCoverage(stub shim.ChaincodeStubInterface, args []string)([]byte, error){
 
-func (t *SimpleChaincode) getReferenceNumber(stub shim.ChaincodeStubInterface)([]byte, error)  {
-
-	refNumberBytes, numErr := stub.GetState("refNumber")
-	if numErr != nil {
-		fmt.Println("Error Getting  ref number")
-		return nil, numErr
-	}
-	
-	return refNumberBytes, nil
-
-}
-
-
-// ============================================================================================================================
-// Smart contract for giving user double points
-// ============================================================================================================================
-func travelContract(tx Transaction, stub shim.ChaincodeStubInterface) float64 {
-
-
-	contractAsBytes, err := stub.GetState(TRAVEL_CONTRACT)
-	if err != nil {
-		return -99
-	}
-	var contract Contract
-	json.Unmarshal(contractAsBytes, &contract)
-	
-	var pointsToTransfer float64
-	pointsToTransfer = tx.Amount
-	if (tx.Date.After(contract.StartDate) && tx.Date.Before(contract.EndDate)) {
-	     pointsToTransfer = pointsToTransfer * 0.5
-	}
- 
- 
-  return pointsToTransfer
-  
-  
-}
-
-
-// ============================================================================================================================
-// Smart contract for giving user points for completing feedback surveys
-// ============================================================================================================================
-func feedbackContract(tx Transaction, stub shim.ChaincodeStubInterface) float64 {
-  
-
-	contractAsBytes, err := stub.GetState(FEEDBACK_CONTRACT)
-	if err != nil {
-		return -99
-	}
-	var contract Contract
-	json.Unmarshal(contractAsBytes, &contract)
-	
-	var pointsToTransfer float64
-	pointsToTransfer = 0
-	if (tx.Date.After(contract.StartDate) && tx.Date.Before(contract.EndDate)) {
-	     pointsToTransfer = 1000
-		 
-		 if (tx.Activities > 0) {
-			pointsToTransfer = pointsToTransfer + float64(tx.Activities)*100
-		 }
-	}
-  
-  
-  return pointsToTransfer
-  
-  
-}
-
-func (t *SimpleChaincode) addSmartContract(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-
-
-	// Create new smart contract based on user input
-	var smartContract Contract
-	
-	discountRate, err := strconv.ParseFloat(args[4], 64)
-	if err != nil {
-		smartContract.Title= "Invalid Contract"
-	}else{
-		smartContract.DiscountRate = discountRate
-	}
-	
-	
-	smartContract.Id = args[0]
-	smartContract.BusinessId  = "T5940872"
-	smartContract.BusinessName = "Open Travel"
-	smartContract.Title = args[1]
-	smartContract.Description = ""
-	smartContract.Conditions = append(smartContract.Conditions, args[2])
-	smartContract.Conditions = append(smartContract.Conditions, args[3]) 
-	smartContract.Icon = ""
-	smartContract.Method = "travelContract"
-	
-	
-	jsonAsBytes, _ := json.Marshal(smartContract)
-	err = stub.PutState(smartContract.Id, jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error adding new smart contract")
-		return nil, err
-	}
-
-	contractIdsAsBytes, _ := stub.GetState("contractIds")
-	var contractIds []string
-	json.Unmarshal(contractIdsAsBytes, &contractIds)
-	
-	
-	var contractIdFound bool
-	contractIdFound = false;
-	for i := range contractIds{
-		if (contractIds[i] == smartContract.Id)  {
-			contractIdFound = true;
-		}
-	}
-	
-	if (!contractIdFound) {
-		contractIds = append(contractIds, smartContract.Id);
-	}
-	
-	
-	jsonAsBytes, _ = json.Marshal(contractIds)
-	err = stub.PutState("contractIds", jsonAsBytes)								
-	if err != nil {
-		fmt.Println("Error storing contract Ids on blockchain")
-		return nil, err
-	}
-
-	return nil, nil
-
-}
-
-
-// ============================================================================================================================
-// Transfer points between members of the Open Points Network
-// ============================================================================================================================
-func (t *SimpleChaincode) transferPoints(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-
-	fmt.Println("Running transferPoints")
-	currentDateStr := time.Now().Format(time.RFC822)
-	startDate, _  := time.Parse(time.RFC822, currentDateStr)
-
-	
-	var tx Transaction
-	tx.Date 		= startDate
-	tx.To 			= args[0]
-	tx.From 		= args[1]
-	tx.Type 	    = args[2]
-	tx.Description 	= args[3]
-	tx.ContractId 	= args[4]
-	activities, _  := strconv.Atoi(args[5])
-	tx.Activities   = activities
-	tx.StatusCode 	= 1
-	tx.StatusMsg 	= "Transaction Completed"
-	
-	
-	amountValue, err := strconv.ParseFloat(args[6], 64)
-	if err != nil {
-		tx.StatusCode = 0
-		tx.StatusMsg = "Invalid Amount"
-	}else{
-		tx.Amount = amountValue
-	}
-	
-	moneyValue, err := strconv.ParseFloat(args[7], 64)
-	if err != nil {
-		tx.StatusCode = 0
-		tx.StatusMsg = "Invalid Amount"
-	}else{
-		tx.Money = moneyValue
-	}
-	
-	
-	// Get the current reference number and update it
-	var refNumber int
-	refNumberBytes, numErr := stub.GetState("refNumber")
-	if numErr != nil {
-		fmt.Println("Error Getting  ref number for transferring points")
-		return nil, err
-	}
-	
-	json.Unmarshal(refNumberBytes, &refNumber)
-	tx.RefNumber 	= strconv.Itoa(refNumber)
-	refNumberBytes, _ = json.Marshal(refNumber)
-	err = stub.PutState("refNumber", refNumberBytes)								
-	if err != nil {
-		fmt.Println("Error Creating updating ref number")
-		return nil, err
-	}
-	
-	// Determine point amount to transfer based on contract type
-	if (tx.ContractId == TRAVEL_CONTRACT) {
-		tx.Amount = travelContract(tx, stub)
-	} else if (tx.ContractId == FEEDBACK_CONTRACT) {
-		tx.Amount = feedbackContract(tx, stub)
-	}  else {
-	
-		contractIdsAsBytes, _ := stub.GetState("contractIds")
-		var contractIds []string
-		json.Unmarshal(contractIdsAsBytes, &contractIds)
-	
-		for i := range contractIds{
-			contractAsBytes, _ := stub.GetState(contractIds[i])
-			var thisContract Contract
-			json.Unmarshal(contractAsBytes, &thisContract)
-			
-			if (tx.ContractId == thisContract.Id) {
-				tx.Amount = tx.Amount -  (tx.Amount * thisContract.DiscountRate);
+			var dentalcoverage Coverage
+			var subscriberID string
+  		var  benefitMaximumBal int
+			var deductibleBal int
+			subscriberID=args[0];
+  	  deductibleBal, err := strconv.Atoi(args[1]);
+			benefitMaximumBal, err =strconv.Atoi(args[2]);
+			coverageAsBytes, err := stub.GetState(subscriberID)
+			fmt.Println("In Update coverage");
+			if err != nil {
+				return nil, errors.New("Failed to get Coverage from blopckchain")
 			}
+		json.Unmarshal(coverageAsBytes,&dentalcoverage)
+		dentalcoverage.AnnualDeductibleBal=deductibleBal;
+		dentalcoverage.AnnualBenefitMaximumBal=benefitMaximumBal;
+		dentalcvgAsBytes, _ := json.Marshal(dentalcoverage)
+		err = stub.PutState(dental.SubscriberID,dentalcvgAsBytes)
+		if err != nil {
+		fmt.Println("Error updating coverage")
+		return nil, err
 		}
-	
-	
-	
+			return nil,nil
+
+		}
+func (t *SimpleChaincode) addCoverage(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+fmt.Println("In addcoverage chaincode");
+	//var dental Coverage
+	var AnnualBenefitMaximum int
+	dental.CoverageName=args[0]
+	dental.CoverageType=args[1]
+ 	dental.CarrierID=args[2]
+ 	dental.GroupNum=args[3]
+	dental.PlanCode=args[4]
+ 	dental.SubscriberID=args[5]
+ 	dental.SubscriberName=args[6]
+	dental.SubscriberDOB=args[7]
+	dental.IsPrimary=args[8]
+	dental.EndDate=args[9]
+	dental.StartDate=args[10]
+  AnnualDeductible, err := strconv.Atoi(args[11])
+	dental.AnnualDeductible=AnnualDeductible
+	AnnualBenefitMaximum, err= strconv.Atoi(args[12])
+	dental.AnnualBenefitMaximum=AnnualBenefitMaximum
+	dental.LifetimeBenefitMaximum=args[13]
+	dental.PreventiveCare =args[14]
+	dental.MinorRestorativeCare=args[15]
+	dental.MajorRestorativeCare=args[16]
+	dental.OrthodonticTreatment=args[17]
+	dental.OrthodonticLifetimeBenefitMaximum=args[18]
+	dental.AnnualDeductibleBal=850
+	dental.AnnualBenefitMaximumBal=5000
+	//dental.EmployeeID="294048"
+	//dental.MemberID="M-01"
+	dental.EmployerID=args[19]
+
+		// // Adding Dependents
+		// var dep1 Member;
+		// var dep2 Member;
+		// dep1.MemberName ="Megan Sheen";
+		// dep1.MemberID="M-03";
+		// dep1.MemberDOB="08/20/1990";
+		// dep1.SubscriberID="ba2345";
+		// jsonAsBytes, _ := json.Marshal(dep1);
+		// err= stub.PutState(dep1.MemberID, jsonAsBytes);
+		// if err != nil {
+		// 	fmt.Println("Error Creating dependents")
+		// 	return nil, err
+		// }
+		//
+		// dep2.MemberName ="Wade Sheen";
+		// dep2.MemberID="M-02";
+		// dep2.MemberDOB="08/20/1961";
+		// dep2.SubscriberID="ba2345";
+		// jsonAsBytes, _ = json.Marshal(dep2);
+		// err= stub.PutState(dep2.MemberID, jsonAsBytes);
+		// if err != nil {
+		// 	fmt.Println("Error Creating dependents")
+		// 	return nil, err
+		// }
+   // 			dental.Dependents=append(dental.Dependents,dep1);
+		// 		dental.Dependents=append(dental.Dependents,dep2);
+			  dental.Premium=args[20]
+//new code for single struct
+dentalAsBytes, _ := json.Marshal(dental)
+err = stub.PutState(dental.SubscriberID, dentalAsBytes)
+if err != nil {
+	fmt.Println("Error adding Coverage")
+	return nil, err
+}
+
+//new code for single struct
+	return nil,nil
+
+
+}
+	// end add coverage
+func diff(a, b time.Time) (year, month, day, hour, min, sec int) {
+	if a.Location() != b.Location() {
+		b = b.In(a.Location())
 	}
-	
-	
-	// Get Receiver account from BC and update point balance
-	rfidBytes, err := stub.GetState(tx.To)
-	if err != nil {
-		return nil, errors.New("transferPoints Failed to get Receiver from BC")
+	if a.After(b) {
+		a, b = b, a
 	}
-	var receiver User
-	fmt.Println("transferPoints Unmarshalling User Struct");
-	err = json.Unmarshal(rfidBytes, &receiver)
-	receiver.Balance = receiver.Balance  + tx.Amount
-	receiver.Modified = currentDateStr
-	receiver.NumTxs = receiver.NumTxs + 1
-	tx.ToName = receiver.Name;
-	
-	
-	//Commit Receiver to ledger
-	fmt.Println("transferPoints Commit Updated receiver To Ledger");
-	txsAsBytes, _ := json.Marshal(receiver)
-	err = stub.PutState(tx.To, txsAsBytes)	
-	if err != nil {
-		return nil, err
+	y1, M1, d1 := a.Date()
+	y2, M2, d2 := b.Date()
+
+	h1, m1, s1 := a.Clock()
+	h2, m2, s2 := b.Clock()
+
+	year = int(y2 - y1)
+	month = int(M2 - M1)
+	day = int(d2 - d1)
+	hour = int(h2 - h1)
+	min = int(m2 - m1)
+	sec = int(s2 - s1)
+
+	// Normalize negative values
+	if sec < 0 {
+		sec += 60
+		min--
 	}
-	
-	// Get Sender account from BC nd update point balance
-	rfidBytes, err = stub.GetState(tx.From)
-	if err != nil {
-		return nil, errors.New("transferPoints Failed to get Financial Institution")
+	if min < 0 {
+		min += 60
+		hour--
 	}
-	var sender User
-	fmt.Println("transferPoints Unmarshalling Sender");
-	err = json.Unmarshal(rfidBytes, &sender)
-	sender.Balance   = sender.Balance  - tx.Amount
-	sender.Modified = currentDateStr
-	sender.NumTxs = sender.NumTxs + 1
-	tx.FromName = sender.Name;
-	
-	//Commit Sender to ledger
-	fmt.Println("transferPoints Commit Updated Sender To Ledger");
-	txsAsBytes, _ = json.Marshal(sender)
-	err = stub.PutState(tx.From, txsAsBytes)	
-	if err != nil {
-		return nil, err
+	if hour < 0 {
+		hour += 24
+		day--
 	}
-	
-	
-	//get the AllTransactions index
-	allTxAsBytes, err := stub.GetState("allTx")
-	if err != nil {
-		return nil, errors.New("transferPoints: Failed to get all Transactions")
+	if day < 0 {
+		// days in month:
+		t := time.Date(y1, M1, 32, 0, 0, 0, 0, time.UTC)
+		day += 32 - t.Day()
+		month--
+	}
+	if month < 0 {
+		month += 12
+		year--
 	}
 
-	//Update transactions arrary and commit to BC
-	fmt.Println("SubmitTx Commit Transaction To Ledger");
-	var txs AllTransactions
-	json.Unmarshal(allTxAsBytes, &txs)
-	txs.Transactions = append(txs.Transactions, tx)
-	txsAsBytes, _ = json.Marshal(txs)
-	err = stub.PutState("allTx", txsAsBytes)	
-	if err != nil {
-		return nil, err
-	}
-	
-	
-	return nil, nil
-
+	return
 }
